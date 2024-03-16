@@ -1,0 +1,129 @@
+---
+title: "text mining"
+author: "Jeremy Shiu"
+date: "2024-02-26"
+output: html_document
+---
+
+```{r}
+library(tidyverse)
+library(tidytext)
+library(wordcloud2)
+library(rvest)
+library(wordcloud)
+library(tm)
+library(htmlwidgets)
+```
+
+```{r}
+tweets <- read.csv("cleaned_text_covid_top_tweets.csv")
+text <- tweets[,c(1,2)]
+```
+
+```{r}
+text <- tibble(text)
+text
+```
+
+```{r}
+original_tweets <- text %>%
+#  mutate(id = original_tweets$id()) %>%
+  unnest_tokens(word, text)
+original_tweets
+```
+
+```{r}
+matchwords_tweets <- original_tweets %>%
+  anti_join(get_stopwords())
+
+corrected_tweets <- subset(matchwords_tweets, matchwords_tweets$word != "http")
+corrected_tweets <- subset(corrected_tweets, corrected_tweets$word != "t.co")
+corrected_tweets <- subset(corrected_tweets, corrected_tweets$word != "rt")
+corrected_tweets <- subset(corrected_tweets, corrected_tweets$word != "s")
+corrected_tweets <- subset(corrected_tweets, corrected_tweets$word != "realdonaldtrump")
+corrected_tweets <- subset(corrected_tweets, corrected_tweets$word != "great")
+
+#| matchwords_tweets$word != "t.co" | matchwords_tweets$word != "rt" | matchwords_tweets$word != "s")
+
+#unique(matchwords_tweets['word'])
+
+#word_counts <- matchwords_tweets %>%
+#  count(word,sort = TRUE)
+write.csv(corrected_tweets, "testing_word_removal.csv")
+```
+
+```{r}
+corrected_tweets %>%
+  count(word, sort = TRUE) %>%
+  head(100) %>%
+  wordcloud2(size = 0.5) %>%
+  saveWidget("wordcloud.html")
+#    size = .4, shape = 'circle')
+#             color = c("steelblue", "white", "darkorchid"),
+#             backgroundColor = "white")
+```
+
+```{r}
+tweet_sentiment <- corrected_tweets %>%
+  inner_join(get_sentiments("bing")) %>%
+  count(id, sentiment) %>%
+  pivot_wider(names_from = sentiment, values_from = n, values_fill = 0) %>%
+  mutate(sentiment = positive - negative)
+
+
+
+tweet_sentiment <- left_join(tweet_sentiment,tweets, by = "id")
+tweet_sentiment
+
+write.csv(tweet_sentiment, file = "cleaner_tweets.csv", row.names = FALSE)
+```
+
+```{r}
+no_sentiment <- read.csv("tweets_01-08-2021.csv")
+class(sentiment_data)
+dates2 <- c(1:42770)
+sentiment_data$dates2 <- dates2
+sentiment_data_pres <- sentiment_data[c(16439:42770),]
+model <- lm(favorites~sentiment + dates2, data = sentiment_data_pres)
+summary(model)
+```
+
+```{r}
+sorted_tweets <- no_sentiment[order(no_sentiment$favorites, decreasing = TRUE),]
+top_pres_tweets <- sorted_tweets[c(1:5000),]
+write.csv(top_pres_tweets, file = "top_pres_tweets_covid.csv", row.names = FALSE)
+```
+
+
+```{r}
+
+dates_wp <- read_html("https://www.presidency.ucsb.edu/documents/donald-j-trump-event-timeline")
+
+s <- session("https://www.presidency.ucsb.edu/documents/donald-j-trump-event-timeline")
+
+timeline <- dates_wp %>% 
+  html_nodes('#block-system-main p') %>% 
+  html_text()
+
+timeline <- timeline[4:length(timeline)]
+
+event_dates <- character(200)
+event_des <- character(200)
+
+j = 1
+for (i in seq_along(timeline)) {
+  if (grepl("^[^\\p{L}]*\\b\\d{2}/\\d{2}/\\d{4}\\b[^\\p{L}]*$", timeline[i])) {
+    event_dates[j] <- timeline[i]
+    event_des[j] <- timeline[i+1]
+    j <- j + 1
+  }
+}
+
+event_dates <- event_dates[event_dates != ""]
+event_des <- event_des[event_des != ""]
+
+events <- data.frame(event_dates, event_des)
+
+write.csv(events, "events.csv", row.names = FALSE)
+```
+

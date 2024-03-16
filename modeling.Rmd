@@ -1,0 +1,300 @@
+---
+title: "Actually modeling now"
+author: "Jeremy Shiu"
+date: "2024-03-12"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+data <- read.csv("complete_data.csv")
+```
+
+```{r}
+model_computer_categories <- aov(favorites ~ machine_category + isFlagged + sentiment + timeofday, data = data)
+model_computer_categories
+summary(model_computer_categories)
+TukeyHSD(model_computer_categories)
+```
+
+```{r}
+model_handpick_category <- aov(favorites ~ category + isFlagged + sentiment + timeofday, data = data)
+model_handpick_category
+summary(model_handpick_category)
+TukeyHSD(model_handpick_category)
+#plot(TukeyHSD(model_handpick_category))
+```
+
+plot
+```{r}
+# Assuming 'data' is your dataset and 'group_var' is the grouping variable
+#library(ggplot2)
+#ggplot(data, aes(x = category, y = favorites)) +
+#  geom_point(stat = "summary", fun.y = "mean") +
+#  geom_errorbar(stat = "summary", fun.data = "mean_cl_normal")
+
+# Calculate the means and standard errors for each group
+means <- aggregate(favorites ~ category, data, mean)
+se <- aggregate(favorites ~ category, data, function(x) sd(x) / sqrt(length(x)))
+
+# Combine means and standard errors into a single data frame
+means$se <- 0
+means$se <- se$favorites
+
+# Plot means with error bars
+ggplot(means, aes(x = category, y = favorites)) +
+  geom_point() +                    # Add points for means
+  geom_errorbar(aes(ymin = favorites - se, ymax = favorites + se), width = 0.2) +  # Add error bars
+  labs(x = "Category", y = "Mean Favorites") +  # Label axes
+  ggtitle("Average Likes per Category") 
+```
+
+```{r}
+means <- aggregate(favorites ~ category, data, mean)
+se <- aggregate(favorites ~ category, data, function(x) sd(x) / sqrt(length(x)))
+
+# Combine means and standard errors into a single data frame
+means$se <- 0
+means$se <- se$favorites
+
+# Assuming 'means' is your dataset, 'category' is the grouping variable, and 'favorites' is the dependent variable
+# 'se' contains standard errors
+
+library(ggplot2)
+
+# Assuming 'means' is your dataset, 'category' is the grouping variable, and 'favorites' is the dependent variable
+# 'se' contains standard errors
+
+# Plot means with error bars
+ggplot(means, aes(x = category, y = favorites)) +
+  geom_point(color = "steelblue", size = 3, shape = 21, fill = "white") +  # Points aesthetics
+  geom_errorbar(aes(ymin = favorites - se, ymax = favorites + se), width = 0.2, color = "black") +  # Error bars aesthetics
+  labs(x = "Category", y = "Mean Favorites") +  # Axes labels
+  ggtitle("Average Likes per Category") +  # Plot title
+  theme_minimal() +  # Minimal theme
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),  # Rotate x-axis labels
+        plot.title = element_text(size = 14, face = "bold"),  # Title appearance
+        axis.title = element_text(size = 12),  # Axis labels appearance
+        legend.position = "none")  # Remove legend
+
+ 
+
+```
+
+barplot
+```{r}
+# Assuming 'means' is your dataset, 'category' is the grouping variable, and 'favorites' is the dependent variable
+# 'se' contains standard errors
+means <- aggregate(favorites ~ category, data, mean)
+se <- aggregate(favorites ~ category, data, function(x) sd(x) / sqrt(length(x)))
+
+# Combine means and standard errors into a single data frame
+means$se <- 0
+means$se <- se$favorites
+
+library(ggplot2)
+
+# Plot means with error bars
+ggplot(means, aes(x = category, y = favorites)) +
+  geom_bar(stat = "identity", fill = "steelblue", width = 0.7) +  # Bar aesthetics
+  geom_errorbar(aes(ymin = favorites - se, ymax = favorites + se), width = 0.2, color = "black") +  # Error bars aesthetics
+  labs(x = "Category", y = "Mean Favorites") +  # Axes labels
+  ggtitle("Average Likes per Category") +  # Plot title
+  theme_minimal() +  # Minimal theme
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),  # Rotate x-axis labels
+        plot.title = element_text(size = 14, face = "bold"),  # Title appearance
+        axis.title = element_text(size = 12),  # Axis labels appearance
+        legend.position = "none")  # Remove legend
+
+```
+
+barplot diff color
+```{r}
+# Assuming 'means' is your dataset, 'category' is the grouping variable, and 'favorites' is the dependent variable
+# 'se' contains standard errors
+
+library(ggplot2)
+
+means <- aggregate(favorites ~ category, data, mean)
+se <- aggregate(favorites ~ category, data, function(x) sd(x) / sqrt(length(x)))
+
+# Combine means and standard errors into a single data frame
+means$se <- 0
+means$se <- se$favorites
+# Create a new variable for alternating colors
+# Assuming 'means' is your dataset, 'category' is the grouping variable, and 'favorites' is the dependent variable
+# 'se' contains standard errors
+
+# Create a vector of eight distinct colors
+colors <- c("skyblue", "salmon", "palegreen", "lightcoral", "purple", "lightpink", "lightgreen", "lightsalmon")
+
+# Create a new variable for alternating colors
+means$color_group <- rep(colors, length.out = nrow(means))
+
+# Plot means with error bars
+ggplot(means, aes(x = category, y = favorites, fill = color_group)) +
+  geom_bar(stat = "identity", width = 0.7) +  # Bar aesthetics
+  geom_errorbar(aes(ymin = favorites - se, ymax = favorites + se), width = 0.2, color = "black") +  # Error bars aesthetics
+  labs(x = "Category", y = "Mean Favorites") +  # Axes labels
+  ggtitle("Average Likes per Category") +  # Plot title
+  scale_fill_identity() +  # Use the specified colors
+  theme_minimal() +  # Minimal theme
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),  # Rotate x-axis labels
+        plot.title = element_text(size = 14, face = "bold"),  # Title appearance
+        axis.title = element_text(size = 12),  # Axis labels appearance
+        legend.position = "none")  # Remove legend
+
+
+```
+
+
+means plot for isflagged
+```{r}
+means <- aggregate(favorites ~ isFlagged, data, mean)
+se <- aggregate(favorites ~ isFlagged, data, function(x) sd(x) / sqrt(length(x)))
+
+# Combine means and standard errors into a single data frame
+means$se <- 0
+means$se <- se$favorites
+
+# Plot means with error bars
+ggplot(means, aes(x = isFlagged, y = favorites)) +
+  geom_point() +                    # Add points for means
+  geom_errorbar(aes(ymin = favorites - se, ymax = favorites + se), width = 0.2) +  # Add error bars
+  labs(x = "Flagged status", y = "Mean Favorites") +  # Label axes
+  ggtitle("Average Likes For Flagged And Non-flagged Tweets") 
+```
+
+isflagged colorful bar chart
+```{r}
+# Assuming 'means' is your dataset, 'category' is the grouping variable, and 'favorites' is the dependent variable
+# 'se' contains standard errors
+
+library(ggplot2)
+means <- aggregate(favorites ~ isFlagged, data, mean)
+se <- aggregate(favorites ~ isFlagged, data, function(x) sd(x) / sqrt(length(x)))
+
+# Combine means and standard errors into a single data frame
+means$se <- 0
+means$se <- se$favorites
+# Create a vector of eight distinct colors
+colors <- c("skyblue", "salmon", "palegreen", "lightcoral", "lightskyblue", "lightpink", "lightgreen", "lightsalmon")
+
+# Create a new variable for alternating colors
+means$color_group <- rep(colors, length.out = nrow(means))
+
+# Plot means with error bars
+ggplot(means, aes(x = isFlagged, y = favorites, fill = color_group)) +
+  geom_bar(stat = "identity", width = 0.7) +  # Bar aesthetics
+  geom_errorbar(aes(ymin = favorites - se, ymax = favorites + se), width = 0.2, color = "black") +  # Error bars aesthetics
+  labs(x = "Flagged Status", y = "Mean Favorites") +  # Axes labels
+  ggtitle("Average Likes for Non-flagged and Flagged") +  # Plot title
+  scale_fill_identity() +  # Use the specified colors
+  theme_minimal() +  # Minimal theme
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),  # Rotate x-axis labels
+        plot.title = element_text(size = 14, face = "bold"),  # Title appearance
+        axis.title = element_text(size = 12),  # Axis labels appearance
+        legend.position = "none")  # Remove legend
+
+```
+
+
+```{r}
+means <- aggregate(favorites ~ sentiment, data, mean)
+se <- aggregate(favorites ~ sentiment, data, function(x) sd(x) / sqrt(length(x)))
+
+# Combine means and standard errors into a single data frame
+means$se <- 0
+means$se <- se$favorites
+
+# Plot means with error bars
+ggplot(means, aes(x = sentiment, y = favorites)) +
+  geom_point() +                    # Add points for means
+  geom_errorbar(aes(ymin = favorites - se, ymax = favorites + se), width = 0.2) +  # Add error bars
+  labs(x = "Sentiment", y = "Mean Favorites") +  # Label axes
+  ggtitle("Mean Favorites For Each Sentiment Category") 
+```
+
+sentiment bar graph pretty
+```{r}
+library(ggplot2)
+means <- aggregate(favorites ~ sentiment, data, mean)
+se <- aggregate(favorites ~ sentiment, data, function(x) sd(x) / sqrt(length(x)))
+
+# Combine means and standard errors into a single data frame
+means$se <- 0
+means$se <- se$favorites
+# Create a vector of eight distinct colors
+colors <- c("skyblue", "salmon", "palegreen", "lightcoral", "lightskyblue", "lightpink", "lightgreen", "lightsalmon")
+
+# Create a new variable for alternating colors
+means$color_group <- rep(colors, length.out = nrow(means))
+
+# Plot means with error bars
+ggplot(means, aes(x = sentiment, y = favorites, fill = color_group)) +
+  geom_bar(stat = "identity", width = 0.7) +  # Bar aesthetics
+  geom_errorbar(aes(ymin = favorites - se, ymax = favorites + se), width = 0.2, color = "black") +  # Error bars aesthetics
+  labs(x = "Sentiment", y = "Mean Favorites") +  # Axes labels
+  ggtitle("Average Likes per Sentiment Category") +  # Plot title
+  scale_fill_identity() +  # Use the specified colors
+  theme_minimal() +  # Minimal theme
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),  # Rotate x-axis labels
+        plot.title = element_text(size = 14, face = "bold"),  # Title appearance
+        axis.title = element_text(size = 12),  # Axis labels appearance
+        legend.position = "none")  # Remove legend
+```
+
+```{r}
+library(ggplot2)
+means <- aggregate(favorites ~ timeofday, data, mean)
+se <- aggregate(favorites ~ timeofday, data, function(x) sd(x) / sqrt(length(x)))
+
+# Combine means and standard errors into a single data frame
+means$se <- 0
+means$se <- se$favorites
+# Create a vector of eight distinct colors
+colors <- c("skyblue", "salmon", "palegreen", "lightcoral", "lightskyblue", "lightpink", "lightgreen", "lightsalmon")
+
+# Create a new variable for alternating colors
+means$color_group <- rep(colors, length.out = nrow(means))
+
+# Plot means with error bars
+ggplot(means, aes(x = timeofday, y = favorites, fill = color_group)) +
+  geom_bar(stat = "identity", width = 0.7) +  # Bar aesthetics
+  geom_errorbar(aes(ymin = favorites - se, ymax = favorites + se), width = 0.2, color = "black") +  # Error bars aesthetics
+  labs(x = "Time of Day", y = "Mean Favorites") +  # Axes labels
+  ggtitle("Average Likes per Time of Day") +  # Plot title
+  scale_fill_identity() +  # Use the specified colors
+  theme_minimal() +  # Minimal theme
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),  # Rotate x-axis labels
+        plot.title = element_text(size = 14, face = "bold"),  # Title appearance
+        axis.title = element_text(size = 12),  # Axis labels appearance
+        legend.position = "none")  # Remove legend
+```
+
+
+```{r}
+model_machine_category_more <- aov(favorites ~ machine_category_more + isFlagged + sentiment + timeofday, data = data)
+model_computer_categories
+summary(model_computer_categories)
+TukeyHSD(model_computer_categories)
+```
+
+```{r}
+model_machine_category_reduce_dim <- aov(favorites ~ machine_category_reduce_dim + isFlagged + sentiment + timeofday, data = data)
+model_computer_categories
+summary(model_computer_categories)
+TukeyHSD(model_computer_categories)
+```
+
+```{r}
+aic_values <- c(AIC(model_computer_categories),AIC(model_handpick_category),AIC(model_machine_category_more), AIC(model_machine_category_reduce_dim))
+best_model <- which.min(aic_values)
+summary(model_handpick_category)
+forward_model <- step(model_handpick_category, direction = "forward")
+forward_model
+```
+

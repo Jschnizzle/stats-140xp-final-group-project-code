@@ -1,0 +1,506 @@
+---
+title: "Categorizing"
+author: "Jeremy Shiu"
+date: "2024-03-09"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+library(tidytext)
+library(dplyr)
+library(stringr)
+```
+
+```{r}
+tweets <- read.csv("cleaned_text_covid_top_tweets.csv")
+text <- tweets[,c(1,2)]
+```
+
+```{r}
+text$Border_Immigration <- 0
+text$Covid <- 0
+text$Election <- 0
+text$Geopolitics <- 0
+text$Internal_Affairs <- 0
+text$Media <- 0
+text$Politics <- 0
+text <- tibble(text)
+text
+```
+
+
+
+```{r}
+# Assuming your dataframe is named 'sentences' and vectors are named 'vector_A' and 'vector_B'
+
+sentences <- data.frame(ID = 1:4, 
+                        Text = c("['legal', 'votes', 'ever', 'sitting', 'president']", 
+                                 "['going', 'well', 'think', 'thank', 'love']", 
+                                 "['election', 'lot']", 
+                                 "['win']"), 
+                        A = 0, B = 0, stringsAsFactors = FALSE)
+
+Media <- c('news', 'fake', 'media', 'fact', 'phony', 'silent')
+
+Election <- c('vote', 'votes', 'campaign', 'numbers', 'fraud', 'sleepy', 'ballots', 'polls', 'poll', 'election', 'voting', 'rating', 'election', 'fight', 'georgia', 'rigged', 'win', 'ratings', 'count', 'silent', 'donate', 'wave', 'steal')
+
+Politics <- c('democrat', 'republican', 'left', 'party', 'democrats', 'republicans', 'corrupt', 'radical', 'right', 'court', 'demo', 'witch', 'administration', 'hunt', 'collusion', 'york', 'supreme', 'Nancy', 'senate', 'crooked', 'congress', 'southern', 'muller', 'phony', 'congressman', 'congresswoman', 'senator', 'representative')
+
+Internal_Affairs <- c('job', 'hard', 'crime', 'working', 'jobs', 'economy', 'open', 'market', 'family', 'police', 'women', 'cities', 'companies', 'officer')
+
+Border_Immigration <- c('border', 'illegal', 'security', 'wall', 'mexico', 'immigration', 'open', 'southern')
+
+Geopolitics <- c('china', 'russia', 'military', 'deal', 'trade', 'korea', 'countries', 'iran', 'sanction', 'sanctions')
+
+Covid <- c('covid', 'coronavirus', 'quarantine', 'vaccines', 'vaccine', 'china')
+
+
+
+#vector_A <- c('going', 'win')
+#vector_B <- c("think", "thank", "love")
+
+count_occurrences <- function(string, vector) {
+  count <- 0
+  for (word in vector) {
+    count <- count + sum(grepl(word, string))
+  }
+  return(count)
+}
+
+# Loop through each row of the data frame
+for (i in 1:nrow(text)) {
+  words <- text$text[i]
+  text$Media[i] <- count_occurrences(words, Media)
+  text$Election[i] <- count_occurrences(words, Election)
+  text$Politics[i] <- count_occurrences(words, Politics)
+  text$Internal_Affairs[i] <- count_occurrences(words, Internal_Affairs)
+  text$Border_Immigration[i] <- count_occurrences(words, Border_Immigration)
+  text$Geopolitics[i] <- count_occurrences(words, Geopolitics)
+  text$Covid[i] <- 2 * count_occurrences(words, Covid)
+}
+
+# View the modified data frame
+print(text)
+write.csv(text, "subject_ranks.csv", row.names = FALSE)
+```
+
+```{r}
+#check_equal_columns <- function(row){
+#  for (i in 3:8){
+#    for (j in (i+1):9) {
+#      if (!is.na(row[i]) && !is.na(row[j]) && row[i] == row[j]){
+#        return(TRUE)
+#      }
+#    }
+#  }
+#  return(FALSE)
+#}
+
+for (i in 1:nrow(text)){
+  max_count <- max(text$Border_Immigration[i],text$Covid[i],text$Election[i],text$Geopolitics[i],text$Internal_Affairs[i],text$Media[i],text$Politics[i])
+  max_count_occurrences <- 0
+  
+  # Check each column if its value equals max_count
+
+  if (max_count == 0) {
+    text$category[i] <- 'NA'
+  } else {
+    if (text$Border_Immigration[i] == max_count) {
+      text$category[i] <- 'Border_Immigration'
+    }
+    if (text$Covid[i] == max_count) {
+      text$category[i] <- 'Covid'
+    }
+    if (text$Election[i] == max_count) {
+      text$category[i] <- 'Election'
+    }
+    if (text$Geopolitics[i] == max_count) {
+      text$category[i] <- 'Geopolitics'
+    }
+    if (text$Internal_Affairs[i] == max_count) {
+      text$category[i] <- 'Internal_Affairs'
+    }
+    if (text$Media[i] == max_count) {
+      text$category[i] <- 'Media'
+    }
+    if (text$Politics[i] == max_count) {
+      text$category[i] <- 'Politics'
+    }
+    if (text$Border_Immigration[i] == max_count) {
+      max_count_occurrences <- max_count_occurrences + 1
+    }
+    if (text$Covid[i] == max_count) {
+      max_count_occurrences <- max_count_occurrences + 1
+    }
+    if (text$Election[i] == max_count) {
+      max_count_occurrences <- max_count_occurrences + 1
+    }
+    if (text$Geopolitics[i] == max_count) {
+      max_count_occurrences <- max_count_occurrences + 1
+    }
+    if (text$Internal_Affairs[i] == max_count) {
+      max_count_occurrences <- max_count_occurrences + 1
+    }
+    if (text$Media[i] == max_count) {
+      max_count_occurrences <- max_count_occurrences + 1
+    }
+    if (text$Politics[i] == max_count) {
+      max_count_occurrences <- max_count_occurrences + 1
+    }
+  }
+  if (max_count_occurrences > 1) {
+    text$category[i] <- 'Tie'
+    if (text$Covid[i] == max_count) {
+      text$category[i] <- 'Covid'
+    }
+    if (text$Election[i] == max_count) {
+      if (text$Election[i] != text$Covid[i]){
+        text$category[i] <- 'Election'
+      }
+    }
+  }
+}
+```
+
+```{r}
+machine_clusters <- read.csv("word_clusters.csv")
+machine_clusters
+split_string <- function(string) {
+  words <- strsplit(string, ", ")[[1]]
+  # Remove brackets and single quotes
+  words <- gsub("\\]", "", words)
+  words <- gsub("'", "", words)
+  words <- gsub("\\[", "", words)
+
+  # Split the string into words
+
+  # Trim whitespace
+  words <- trimws(words)
+  return(words)
+}
+word_vectors <- lapply(machine_clusters$text, split_string)
+machine1 <- c(word_vectors[[1]])
+machine2 <- c(word_vectors[[2]])
+machine3 <- c(word_vectors[[3]])
+
+count_occurrences <- function(string, vector) {
+  count <- 0
+  for (word in vector) {
+    count <- count + sum(grepl(word, string))
+  }
+  return(count)
+}
+
+text$machine1 <- 0
+text$machine2 <- 0
+text$machine3 <- 0
+text$machine_category <- NA
+# Loop through each row of the data frame
+for (i in 1:nrow(text)) {
+  words <- text$text[i]
+  text$machine1[i] <- count_occurrences(words, machine1)
+  text$machine2[i] <- count_occurrences(words, machine2)
+  text$machine3[i] <- count_occurrences(words, machine3)
+}
+
+for (i in 1:nrow(text)){
+  max_count <- max(text$machine1[i],text$machine2[i],text$machine3[i])
+  max_count_occurrences <- 0
+  
+  # Check each column if its value equals max_count
+
+  if (max_count == 0) {
+    text$machine_category[i] <- 'NA'
+  } else {
+    if (text$machine1[i] == max_count) {
+      text$machine_category[i] <- 'machine1'
+    }
+    if (text$machine2[i] == max_count) {
+      text$machine_category[i] <- 'machine2'
+    }
+    if (text$machine3[i] == max_count) {
+      text$machine_category[i] <- 'machine3'
+    }
+    if (text$machine1[i] == max_count) {
+      max_count_occurrences <- max_count_occurrences + 1
+    }
+    if (text$machine2[i] == max_count) {
+      max_count_occurrences <- max_count_occurrences + 1
+    }
+    if (text$machine3[i] == max_count) {
+      max_count_occurrences <- max_count_occurrences + 1
+    }
+    if (max_count_occurrences > 1) {
+    text$machine_category[i] <- 'Tie'
+    }
+  }  
+#    if (text$Covid[i] == max_count) {
+#      text$category[i] <- 'Covid'
+#    }
+#    if (text$Election[i] == max_count) {
+#      if (text$Election[i] != text$Covid[i]){
+#        text$category[i] <- 'Election'
+#      }
+#    }
+#  }
+}
+```
+
+```{r}
+num_ties <- sum(text$category == "Tie")
+num_ties_machine <- sum(text$machine_category == "Tie")
+num_ties
+num_ties_machine
+```
+
+```{r}
+num_NAs <- sum(text$category == "NA")
+num_NAs_machine <- sum(text$machine_category == "NA")
+num_NAs
+num_NAs_machine
+```
+
+```{r}
+machine_clusters_more <- read.csv("word_clusters_more.csv")
+
+split_string <- function(string) {
+  words <- strsplit(string, ", ")[[1]]
+  # Remove brackets and single quotes
+  words <- gsub("\\]", "", words)
+  words <- gsub("'", "", words)
+  words <- gsub("\\[", "", words)
+
+  # Split the string into words
+
+  # Trim whitespace
+  words <- trimws(words)
+  return(words)
+}
+word_vectors_more <- lapply(machine_clusters_more$text, split_string)
+machine_more1 <- c(word_vectors_more[[1]])
+machine_more2 <- c(word_vectors_more[[2]])
+machine_more3 <- c(word_vectors_more[[3]])
+machine_more4 <- c(word_vectors_more[[4]])
+machine_more5 <- c(word_vectors_more[[5]])
+machine_more6 <- c(word_vectors_more[[6]])
+
+count_occurrences <- function(string, vector) {
+  count <- 0
+  for (word in vector) {
+    count <- count + sum(grepl(word, string))
+  }
+  return(count)
+}
+
+text$machine_more1 <- 0
+text$machine_more2 <- 0
+text$machine_more3 <- 0
+text$machine_more4 <- 0
+text$machine_more5 <- 0
+text$machine_more6 <- 0
+text$machine_category_more <- NA
+# Loop through each row of the data frame
+for (i in 1:nrow(text)) {
+  words <- text$text[i]
+  text$machine_more1[i] <- count_occurrences(words, machine_more1)
+  text$machine_more2[i] <- count_occurrences(words, machine_more2)
+  text$machine_more3[i] <- count_occurrences(words, machine_more3)
+  text$machine_more4[i] <- count_occurrences(words, machine_more4)
+  text$machine_more5[i] <- count_occurrences(words, machine_more5)
+  text$machine_more6[i] <- count_occurrences(words, machine_more6)
+}
+
+for (i in 1:nrow(text)){
+  max_count <- max(text$machine_more1[i],text$machine_more2[i],text$machine_more3[i],text$machine_more4[i],text$machine_more5[i],text$machine_more6[i])
+  max_count_occurrences <- 0
+  # Check each column if its value equals max_count
+
+  if (max_count == 0) {
+    text$machine_category_more[i] <- 'NA'
+  } else {
+    if (text$machine_more1[i] == max_count) {
+      text$machine_category_more[i] <- 'machine_more1'
+    }
+    if (text$machine_more2[i] == max_count) {
+      text$machine_category_more[i] <- 'machine_more2'
+    }
+    if (text$machine_more3[i] == max_count) {
+      text$machine_category_more[i] <- 'machine_more3'
+    }
+    if (text$machine_more4[i] == max_count) {
+      text$machine_category_more[i] <- 'machine_more4'
+    }
+    if (text$machine_more5[i] == max_count) {
+      text$machine_category_more[i] <- 'machine_more5'
+    }
+    if (text$machine_more6[i] == max_count) {
+      text$machine_category_more[i] <- 'machine_more6'
+    }
+    if (text$machine_more1[i] == max_count) {
+      max_count_occurrences <- max_count_occurrences + 1
+    }
+    if (text$machine_more2[i] == max_count) {
+      max_count_occurrences <- max_count_occurrences + 1
+    }
+    if (text$machine_more3[i] == max_count) {
+      max_count_occurrences <- max_count_occurrences + 1
+    }
+    if (text$machine_more4[i] == max_count) {
+      max_count_occurrences <- max_count_occurrences + 1
+    }
+    if (text$machine_more5[i] == max_count) {
+      max_count_occurrences <- max_count_occurrences + 1
+    }
+    if (text$machine_more6[i] == max_count) {
+      max_count_occurrences <- max_count_occurrences + 1
+    }
+    if (max_count_occurrences > 1) {
+    text$machine_category_more[i] <- 'Tie'
+    }
+  }  
+#    if (text$Covid[i] == max_count) {
+#      text$category[i] <- 'Covid'
+#    }
+#    if (text$Election[i] == max_count) {
+#      if (text$Election[i] != text$Covid[i]){
+#        text$category[i] <- 'Election'
+#      }
+#    }
+#  }
+}
+```
+
+```{r}
+num_ties <- sum(text$category == "Tie")
+num_ties_machine <- sum(text$machine_category == "Tie")
+num_ties_machine_more <- sum(text$machine_category_more == "Tie")
+
+num_ties
+num_ties_machine
+num_ties_machine_more
+```
+
+```{r}
+num_NAs <- sum(text$category == "NA")
+num_NAs_machine <- sum(text$machine_category == "NA")
+num_NAs_machine_more <- sum(text$machine_category_more == "NA")
+num_NAs
+num_NAs_machine
+num_NAs_machine_more
+```
+
+```{r}
+machine_clusters_reduce_dim <- read.csv("word_clusters_reduce_dim.csv")
+split_string <- function(string) {
+  words <- strsplit(string, ", ")[[1]]
+  # Remove brackets and single quotes
+  words <- gsub("\\]", "", words)
+  words <- gsub("'", "", words)
+  words <- gsub("\\[", "", words)
+
+  # Split the string into words
+
+  # Trim whitespace
+  words <- trimws(words)
+  return(words)
+}
+word_vectors_reduce_dim <- lapply(machine_clusters_reduce_dim$text, split_string)
+machine_reduce_dim1 <- c(word_vectors_reduce_dim[[1]])
+machine_reduce_dim2 <- c(word_vectors_reduce_dim[[2]])
+machine_reduce_dim3 <- c(word_vectors_reduce_dim[[3]])
+
+count_occurrences <- function(string, vector) {
+  count <- 0
+  for (word in vector) {
+    count <- count + sum(grepl(word, string))
+  }
+  return(count)
+}
+
+text$machine_reduce_dim1 <- 0
+text$machine_reduce_dim2 <- 0
+text$machine_reduce_dim3 <- 0
+text$machine_category_reduce_dim <- NA
+# Loop through each row of the data frame
+for (i in 1:nrow(text)) {
+  words <- text$text[i]
+  text$machine_reduce_dim1[i] <- count_occurrences(words, machine_reduce_dim1)
+  text$machine_reduce_dim2[i] <- count_occurrences(words, machine_reduce_dim2)
+  text$machine_reduce_dim3[i] <- count_occurrences(words, machine_reduce_dim3)
+}
+
+for (i in 1:nrow(text)){
+  max_count <- max(text$machine_reduce_dim1[i],text$machine_reduce_dim2[i],text$machine_reduce_dim3[i])
+  max_count_occurrences <- 0
+  
+  # Check each column if its value equals max_count
+
+  if (max_count == 0) {
+    text$machine_category_reduce_dim[i] <- 'NA'
+  } else {
+    if (text$machine_reduce_dim1[i] == max_count) {
+      text$machine_category_reduce_dim[i] <- 'machine_reduce_dim1'
+    }
+    if (text$machine_reduce_dim2[i] == max_count) {
+      text$machine_category_reduce_dim[i] <- 'machine_reduce_dim2'
+    }
+    if (text$machine_reduce_dim3[i] == max_count) {
+      text$machine_category_reduce_dim[i] <- 'machine_reduce_dim3'
+    }
+    if (text$machine_reduce_dim1[i] == max_count) {
+      max_count_occurrences <- max_count_occurrences + 1
+    }
+    if (text$machine_reduce_dim2[i] == max_count) {
+      max_count_occurrences <- max_count_occurrences + 1
+    }
+    if (text$machine_reduce_dim3[i] == max_count) {
+      max_count_occurrences <- max_count_occurrences + 1
+    }
+    if (max_count_occurrences > 1) {
+    text$machine_category_reduce_dim[i] <- 'Tie'
+    }
+  }  
+#    if (text$Covid[i] == max_count) {
+#      text$category[i] <- 'Covid'
+#    }
+#    if (text$Election[i] == max_count) {
+#      if (text$Election[i] != text$Covid[i]){
+#        text$category[i] <- 'Election'
+#      }
+#    }
+#  }
+}
+```
+
+```{r}
+num_ties <- sum(text$category == "Tie")
+num_ties_machine <- sum(text$machine_category == "Tie")
+num_ties_machine_more <- sum(text$machine_category_more == "Tie")
+num_ties_machine_reduce_dim <- sum(text$machine_category_reduce_dim == "Tie")
+
+num_ties
+num_ties_machine
+num_ties_machine_more
+num_ties_machine_reduce_dim
+```
+
+```{r}
+num_NAs <- sum(text$category == "NA")
+num_NAs_machine <- sum(text$machine_category == "NA")
+num_NAs_machine_more <- sum(text$machine_category_more == "NA")
+num_NAs_machine_reduce_dim <- sum(text$machine_category_reduce_dim == "NA")
+num_NAs
+num_NAs_machine
+num_NAs_machine_more
+num_NAs_machine_reduce_dim
+```
+
+```{r}
+write.csv(text, "categorized_cleaned_data_all.csv")
+```
+
